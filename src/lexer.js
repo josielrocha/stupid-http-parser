@@ -204,7 +204,6 @@ module.exports = class Lexer {
 
     if (this._isLineBreak(this._previousChar())) {
       this._nextChar();
-      this._nextChar();
 
       return new Token(Token.BODY_DELIMITER, '<<DELIMITER>>');
     }
