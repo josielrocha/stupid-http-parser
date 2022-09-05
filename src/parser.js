@@ -34,8 +34,6 @@ module.exports = class Parser {
         return;
       }
 
-      console.log('WHILE 02');
-
       this._match(Token.HEADER);
     }
   }
