@@ -6,10 +6,10 @@ Accept: */*
 `;
 
 const HTTP_POST = `
-POST /some-resource HTTP/2
-Host: www.mycoolwebsite.com
+POST /my/awesome/api HTTP/2
 User-Agent: curl/7.54.0
 Content-Type: application/json
+Accept: application/json
 
 {"foo":"bar","baz":"foobar"}
 `;

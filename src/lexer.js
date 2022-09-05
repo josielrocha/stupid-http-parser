@@ -1,24 +1,5 @@
-class Token {
-  constructor(type, value) {
-    this.type = type;
-    this.value = value;
-  }
-
-  toString() {
-    return `<type=${this.type}, value=${this.value}>`;
-  }
-
-  static METHOD = 0;
-  static PATH = 1;
-  static VERSION = 2;
-  static HEADER = 3;
-  static BODY_DELIMITER = 4;
-  static BODY = 5;
-}
-
-function debug(...args) {
-  // console.debug(...args);
-}
+const Token = require('./token');
+const debug = require('./debug');
 
 module.exports = class Lexer {
   constructor(input) {
@@ -68,6 +49,11 @@ module.exports = class Lexer {
       }
 
       throw new Error(`Lexical error column: ${this.charPos}`);
+    }
+
+    const token = this._end();
+    if (token) {
+      return token;
     }
   }
 
@@ -195,11 +181,16 @@ module.exports = class Lexer {
     let c;
     let value = char;
     while (c=this._nextChar()) {
-      if (this._isLineBreak(c) || this.charPos === this.input.length -1) {
+      if (this._isLineBreak(c)) {
         return new Token(Token.HEADER, value);
       }
 
       value += c;
+
+      // End
+      if (this.charPos === this.input.length -1) {
+        return new Token(Token.HEADER, value);
+      }
     }
 
     this._previousChar(value.length-1);
@@ -211,24 +202,32 @@ module.exports = class Lexer {
       return null;
     }
 
-    if (this._nextChar()) {
-      return new Token(Token.BODY_DELIMITER, 'BODY_DELIMITER');
+    if (this._isLineBreak(this._previousChar())) {
+      this._nextChar();
+      this._nextChar();
+
+      return new Token(Token.BODY_DELIMITER, '<<DELIMITER>>');
     }
 
-    this._previousChar();
     return null;
   }
 
   _body(char) {
-    const c = this._previousChar(2);
-    if (!this._bodyDelimiter(c)) {
-      this._nextChar(2);
+    if (this._isLineBreak(char)) {
       return null;
     }
 
     const value = this.input.slice(this.charPos, this.input.length);
     this.charPos = this.input.length - 1;
     return new Token(Token.BODY, value);
+  }
+
+  _end() {
+    if (this.charPos >= this.input.length -1) {
+      return new Token(Token.END, '<<END>>');
+    }
+
+    return null;
   }
 
   _isLineBreak(c) {
@@ -239,8 +238,13 @@ module.exports = class Lexer {
    * Retorna o próximo caractere
    */
   _nextChar() {
+    if (this.charPos >= this.input.length -1) {
+      return null;
+    }
+
     this.charPos++;
-    debug(`nextChar: ${this.input[this.charPos]}`)
+
+    // debug(`nextChar: ${this.input[this.charPos]}`)
     return this.input[this.charPos];
   }
 
